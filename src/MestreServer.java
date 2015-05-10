@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package trabalho1;
+
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -49,7 +49,7 @@ public class MestreServer implements Mestre {
             // Bind the remote object in the registry
             Registry registry = LocateRegistry.getRegistry(); // opcional: host
 
-            registry.bind("Mestre", (Remote) objref);
+            registry.bind("Mestre", objref);
             System.err.println("Server ready");
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
