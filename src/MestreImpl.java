@@ -10,8 +10,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -63,16 +63,24 @@ public class MestreImpl implements Mestre {
         }
 
         /*Consolidam o resultado*/
-        List<Integer> numerosOrdenados = new ArrayList<>();
-        for (ExecutarEscravo ee : escravosExecutando) {
-            numerosOrdenados.addAll(ee.listaNumeros);
+        List<Integer> numerosOrdenados = escravosExecutando.get(0).listaNumeros;
+        for (int i = 1; i < escravosExecutando.size(); i++) {
+//            numerosOrdenados = escravosExecutando.get(i).listaNumeros;
+            List<Integer> list1aux2 = escravosExecutando.get(i).listaNumeros;
+//            merge(numerosOrdenados, list1aux2);
+            numerosOrdenados = mergeLists(numerosOrdenados, list1aux2);
+            
         }
+        /*Consolidam o resultado*/
+//        List<Integer> numerosOrdenados = new ArrayList<>();
+//        for (ExecutarEscravo ee : escravosExecutando) {
+//            numerosOrdenados.addAll(ee.listaNumeros);
+//        }
 
-        /*Ordena o vetor consolidado*/
-        System.out.println("Eu sou o Mestre. Os escravos acabaram. O resultado é :" + numerosOrdenados);
-        Collections.sort(numerosOrdenados);
-        System.out.println("Eu sou o Mestre e a minha parte ordenada é :" + numerosOrdenados);
+        listaThreads.clear();
+        escravosExecutando.clear();
 
+//        System.out.println("Eu sou o Mestre e a minha parte ordenada é :" + numerosOrdenados);
         return numerosOrdenados;
     }
 
@@ -93,14 +101,40 @@ public class MestreImpl implements Mestre {
             ExecutarEscravo executarEscravo = new ExecutarEscravo(key, escravo, subList);
             escravosExecutando.add(executarEscravo);
             Thread thread = new Thread(executarEscravo, key.toString()); //cira uma thread cujo nome é o ID do escravo
-            System.err.println("Executar Thread");
+//            System.err.println("Executar Thread");
             listaThreads.add(thread);
             thread.start();
             indiceInicial = indiceFinal;
             indiceFinal += qtd;
         }
     }
-    
+
+    public static void merge(List<Integer> l1, List<Integer> l2) {
+        for (int index1 = 0, index2 = 0; index2 < l2.size(); index1++) {
+            if (index1 == l1.size() || l1.get(index1) > l2.get(index2)) {
+                l1.add(index1, l2.get(index2++));
+            }
+        }
+    }
+
+    public List<Integer> mergeLists(List<Integer> list1, List<Integer> list2) {
+        List<Integer> out = new ArrayList<Integer>();
+        Iterator<Integer> i1 = list1.iterator();
+        Iterator<Integer> i2 = list2.iterator();
+        Integer e1 = i1.hasNext() ? i1.next() : null;
+        Integer e2 = i2.hasNext() ? i2.next() : null;
+        while (e1 != null || e2 != null) {
+            if (e2 == null || e1 != null && e1 < e2) {
+                out.add(e1);
+                e1 = i1.hasNext() ? i1.next() : null;
+            } else {
+                out.add(e2);
+                e2 = i2.hasNext() ? i2.next() : null;
+            }
+        }
+        return out;
+    }
+
     public static void main(String args[]) {
         try {
             Registry registry = LocateRegistry.getRegistry(); // opcional: host
@@ -113,6 +147,7 @@ public class MestreImpl implements Mestre {
             }
 
             MestreImpl obj = new MestreImpl();
+            obj.attachShutDownHook();
             Mestre objref = (Mestre) UnicastRemoteObject.exportObject(obj, 0);
             // Bind the remote object in the registry
 
@@ -122,6 +157,15 @@ public class MestreImpl implements Mestre {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();
         }
+    }
+
+    public void attachShutDownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                escravos.clear();
+            }
+        });
     }
 
     public class ExecutarEscravo implements Runnable {
@@ -139,9 +183,9 @@ public class MestreImpl implements Mestre {
         @Override
         public void run() {
             try {
-                System.err.println("Indo Ordernar o Vetor no Escravo");
+//                System.err.println("Indo Ordernar o Vetor no Escravo");
                 listaNumeros = escravo.ordenarVetor(listaNumeros);
-                System.err.println("Terminei de Ordenar o Vetor no Escravo");
+//                System.err.println("Terminei de Ordenar o Vetor no Escravo");
             } catch (RemoteException ex) {
                 try {
                     retirarEscravo(idEscravo);
