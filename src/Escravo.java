@@ -12,4 +12,6 @@ public interface Escravo extends Ordenar {
     public int getId() throws RemoteException;
 
     public void setId(int id) throws RemoteException;
+    
+    public void terminarEscravo() throws RemoteException;
 }

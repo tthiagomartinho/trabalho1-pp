@@ -28,29 +28,28 @@ public class EscravoImpl implements Escravo {
 
     @Override
     public List<Integer> ordenarVetor(List<Integer> numeros) throws RemoteException {
-//        System.out.println("Ordenando Vetor " + numeros);
         Collections.sort(numeros);
-//        System.out.println("A minha parte ordenada é " + numeros);
         return numeros;
     }
 
-    public void registrarEscravo(String host) throws RemoteException, NotBoundException {
-
+    @Override
+    public void terminarEscravo() {
+        System.out.println("Terminando o Escravo");
+        System.exit(0);
     }
 
     public static void main(String[] args) {
         String host = (args.length < 1) ? null : args[0];
         try {
             EscravoImpl escravo = new EscravoImpl();
-            escravo.attachShutDownHook();
             Escravo objref = (Escravo) UnicastRemoteObject.exportObject(escravo, 0);
             System.out.println(host);
             Registry registry = LocateRegistry.getRegistry(host);
             escravo.mestre = (Mestre) registry.lookup("Mestre");
             escravo.mestre.registraEscravo((Escravo) objref);
-        } catch (Exception e) {
-            System.err.println("Client exception: " + e.toString());
-            e.printStackTrace();
+            escravo.attachShutDownHook();
+        } catch (RemoteException | NotBoundException e) {
+            System.out.println("Não foi possível registrar o escravo.");
         }
     }
 
