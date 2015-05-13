@@ -15,5 +15,5 @@ public interface Mestre extends java.rmi.Remote, Ordenar {
 
     public void registraEscravo(Escravo escravo) throws RemoteException;
 
-    public void retirarEscravo(Escravo escravo) throws RemoteException;
+    public void retirarEscravo(int idEscravo) throws RemoteException;
 }

@@ -4,16 +4,16 @@
  * and open the template in the editor.
  */
 
-import java.io.Serializable;
 import java.rmi.NotBoundException;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,47 +23,35 @@ import java.util.logging.Logger;
  */
 public class MestreImpl implements Mestre {
 
-    List<Escravo> escravos;
+    private Map<Integer, Escravo> escravos;
+    private List<Thread> listaThreads;
+    private List<ExecutarEscravo> escravosExecutando;
 
     public MestreImpl() {
-        escravos = new ArrayList<>();
+        escravos = new HashMap<>();
+        listaThreads = new ArrayList<>();
+        escravosExecutando = new ArrayList<>();
     }
 
     @Override
     public void registraEscravo(Escravo escravo) throws RemoteException {
         System.out.println("Registrando Escravo");
-        escravos.add(escravo);
+        int id = GeraradorID.obterNumeroAtual();
+        escravos.put(id, escravo);
+        escravo.setId(id);
     }
 
     @Override
-    public void retirarEscravo(Escravo escravo) throws RemoteException {
-        escravos.remove(escravo);
+    public void retirarEscravo(int idEscravo) throws RemoteException {
+        if (escravos.containsKey(idEscravo)) {
+            escravos.remove(idEscravo);
+        }
     }
 
     @Override
     public List<Integer> ordenarVetor(List<Integer> numeros) throws RemoteException {
-        int tamanhoLista = numeros.size();
-        int tamanhoEscravos = escravos.size();
-        int qtd = tamanhoLista / tamanhoEscravos;
-        int rst = tamanhoLista % tamanhoEscravos;
-
-        List<Thread> listaThreads = new ArrayList<>();
-        List<ExecutarEscravo> escravosExecutando = new ArrayList<>();
-        int indiceInicial = 0;
-        int indiceFinal = qtd;
-
-        /*Inicia as threads chamando os escravos para executarem o sort*/
-        for (int i = 0; i < tamanhoEscravos; i++) {
-            List<Integer> subList = new ArrayList<>(numeros.subList(indiceInicial, indiceFinal));
-            ExecutarEscravo executarEscravo = new ExecutarEscravo(escravos.get(i), subList);
-            escravosExecutando.add(executarEscravo);
-            Thread thread = new Thread(executarEscravo);
-            System.err.println("Executar Thread");
-            listaThreads.add(thread);
-            thread.start();
-            indiceInicial = indiceFinal;
-            indiceFinal += qtd;
-        }
+        //Divide a tarefa e executa
+        delegarTrabalho(numeros);
 
         /*Espera todas as threads morrerem*/
         for (Thread thread : listaThreads) {
@@ -88,6 +76,31 @@ public class MestreImpl implements Mestre {
         return numerosOrdenados;
     }
 
+    public void delegarTrabalho(List<Integer> numeros) throws RemoteException {
+        int tamanhoLista = numeros.size();
+        int tamanhoEscravos = escravos.size();
+        int qtd = tamanhoLista / tamanhoEscravos;
+        int rst = tamanhoLista % tamanhoEscravos;
+
+        int indiceInicial = 0;
+        int indiceFinal = qtd + rst;
+
+        /*Inicia as threads chamando os escravos para executarem o sort*/
+        for (Map.Entry<Integer, Escravo> entrySet : escravos.entrySet()) {
+            Integer key = entrySet.getKey(); //pega o Id do escravo
+            Escravo escravo = entrySet.getValue(); //pega o escravo
+            List<Integer> subList = new ArrayList<>(numeros.subList(indiceInicial, indiceFinal));
+            ExecutarEscravo executarEscravo = new ExecutarEscravo(key, escravo, subList);
+            escravosExecutando.add(executarEscravo);
+            Thread thread = new Thread(executarEscravo, key.toString()); //cira uma thread cujo nome é o ID do escravo
+            System.err.println("Executar Thread");
+            listaThreads.add(thread);
+            thread.start();
+            indiceInicial = indiceFinal;
+            indiceFinal += qtd;
+        }
+    }
+    
     public static void main(String args[]) {
         try {
             Registry registry = LocateRegistry.getRegistry(); // opcional: host
@@ -111,12 +124,14 @@ public class MestreImpl implements Mestre {
         }
     }
 
-    public class ExecutarEscravo implements Runnable, Remote, Serializable {
+    public class ExecutarEscravo implements Runnable {
 
+        private final int idEscravo;
         private final Escravo escravo;
         private List<Integer> listaNumeros;
 
-        public ExecutarEscravo(Escravo escravo, List<Integer> listaNumeros) {
+        public ExecutarEscravo(int idEscravo, Escravo escravo, List<Integer> listaNumeros) {
+            this.idEscravo = idEscravo;
             this.escravo = escravo;
             this.listaNumeros = listaNumeros;
         }
@@ -128,7 +143,10 @@ public class MestreImpl implements Mestre {
                 listaNumeros = escravo.ordenarVetor(listaNumeros);
                 System.err.println("Terminei de Ordenar o Vetor no Escravo");
             } catch (RemoteException ex) {
-                Logger.getLogger(MestreImpl.class.getName()).log(Level.SEVERE, null, ex);
+                try {
+                    retirarEscravo(idEscravo);
+                } catch (RemoteException ex1) {
+                }
             }
         }
     }

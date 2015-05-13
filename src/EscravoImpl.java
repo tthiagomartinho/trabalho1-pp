@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 
-import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -16,8 +15,10 @@ import java.util.List;
  *
  * @author thiago
  */
-public class EscravoImpl implements Escravo, Serializable {
-
+public class EscravoImpl implements Escravo {
+    
+    private int id;
+    
     public EscravoImpl() {
     }
 
@@ -44,4 +45,13 @@ public class EscravoImpl implements Escravo, Serializable {
         }
     }
 
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(int id) {
+        this.id = id;
+    }
 }

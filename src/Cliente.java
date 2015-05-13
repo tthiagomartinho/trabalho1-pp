@@ -19,11 +19,11 @@ import java.util.Random;
  */
 public class Cliente {
 
-    public static void versaoParalela(String host) throws RemoteException, NotBoundException {
+    public static void versaoParalela(String host,String[] args) throws RemoteException, NotBoundException {
         Registry registry = LocateRegistry.getRegistry(host);
         Mestre stub = (Mestre) registry.lookup("Mestre");
 
-        List<Integer> numeros = Cliente.gerarNumerosAleatoriosParaTeste();
+        List<Integer> numeros = Cliente.gerarNumerosAleatorios(args);
         long nanoTime = System.nanoTime();
         System.err.println("Eu sou o cliente. Quero esse vetor ordenado: " + numeros);
         numeros = stub.ordenarVetor(numeros);
@@ -32,8 +32,8 @@ public class Cliente {
         System.out.println("Eu sou o cliente. Isso foi o que eu recebi: " + numeros);
     }
 
-    public static void versaoSequencial() {
-        List<Integer> numeros = Cliente.gerarNumerosAleatoriosParaTeste();
+    public static void versaoSequencial(String[] args) {
+        List<Integer> numeros = Cliente.gerarNumerosAleatorios(args);
         System.out.println(numeros);
         long nanoTime = System.nanoTime();
         Collections.sort(numeros);
@@ -47,9 +47,20 @@ public class Cliente {
     }
 
     public static void main(String[] args) {
-        String host = (args.length < 1) ? null : args[0];
+        //String host = (args.length < 1) ? null : args[0];
         try {
-            versaoParalela(host);
+            if(args.length==2){
+                if(args[0].equals("p")){
+                    versaoParalela(null,args);
+                    //versaoParalela(host);
+                }else if(args[0].equals("s")){
+                    versaoSequencial(args);
+                }
+                //System.out.println("host: "+host);
+            }else{
+                System.out.println("primeiro argumento: p(paralelo) ou s(sequencial), segundo argumento: tamanho do vetor");
+            }
+                
 //            versaoSequencial();
         } catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
@@ -57,23 +68,25 @@ public class Cliente {
         }
     }
 
-    public static List<Integer> gerarNumerosAleatorios() {
+    public static List<Integer> gerarNumerosAleatorios(String[] args) {
         List<Integer> numeros = new ArrayList<>();
         Random r = new Random();
-        int n1; // tamanho dos vetores gerados
-
-        n1 = r.nextInt(1000000);
-        // generate a uniformly distributed int random numbers
-        int[] integers = new int[n1];
-
-        for (int i = 0; i < 1000000; i++) {
-            numeros.add(r.nextInt());
+        int n1 = Integer.parseInt(args[1]); // tamanho dos vetores gerados
+        
+        if(!(n1>0 && n1<1000000)){
+            n1 = r.nextInt(1000000); // caso o tamanho passado náo seja valido e calculado um tamanho aleatorio
         }
+        
+        
+        // generate a uniformly distributed int random numbers
 
+        for (int i = 0; i < n1; i++) {
+            numeros.add(r.nextInt(1000));
+        }
         return numeros;
     }
     
-    public static List<Integer> gerarNumerosAleatoriosParaTeste() {
+    public static List<Integer> gerarNumerosAleatoriosParaTeste(String[]args) {
         List<Integer> numeros = new ArrayList<>();
         Random r = new Random();
         for (int i = 0; i < 6; i++) {
