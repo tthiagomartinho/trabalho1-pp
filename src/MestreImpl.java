@@ -72,7 +72,6 @@ public class MestreImpl implements Mestre {
 
             List<ExecutarEscravo> escravosFaltosos = new ArrayList<>();
             List<Integer> numerosNaoOrdenados = new ArrayList<>();
-            System.err.println("Indo verificar se existem escravos faltosos");
             for (ExecutarEscravo escravoExecutando : escravosExecutando) {
                 if (!escravoExecutando.sucesso) {
                     escravosFaltosos.add(escravoExecutando);
@@ -81,12 +80,10 @@ public class MestreImpl implements Mestre {
                 }
             }
 
-            System.err.println("Existem " + escravosFaltosos.size() + " escravos faltosos");
             if (!escravosFaltosos.isEmpty()) {
                 for (ExecutarEscravo escravoExecutando : escravosFaltosos) {
                     escravosExecutando.remove(escravoExecutando);
                 }
-                System.out.print("Escravo Faltoso. Vou delegar o trabalho novamente");
                 delegarTrabalho(numerosNaoOrdenados);
             } else {
                 existeEscravoFaltoso = false;
@@ -115,7 +112,6 @@ public class MestreImpl implements Mestre {
 
         int indiceInicial = 0;
         int indiceFinal = qtd + rst;
-        System.err.println("Existem " + tamanhoEscravos + " escravos nesse momento");
 
         /*Inicia as threads chamando os escravos para executarem o sort*/
         for (Map.Entry<Integer, Escravo> entrySet : escravos.entrySet()) {
@@ -220,5 +216,10 @@ public class MestreImpl implements Mestre {
                 }
             }
         }
+    }
+
+    @Override
+    public int getQuantidadeEscravos() throws RemoteException {
+        return escravos.size();
     }
 }
