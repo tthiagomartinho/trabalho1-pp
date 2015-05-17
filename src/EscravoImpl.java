@@ -26,12 +26,28 @@ public class EscravoImpl implements Escravo {
     public EscravoImpl() {
     }
 
+    /**
+     * Método remoto que recebe a chamada do cliente para ordernar uma lista de
+     * inteiros
+     *
+     * @param numeros - lista de inteiros que deseja-se ordernar
+     * @return a lista de inteiros ordenada
+     * @throws java.rmi.RemoteException
+     */
     @Override
     public List<Integer> ordenarVetor(List<Integer> numeros) throws RemoteException {
         Collections.sort(numeros);
         return numeros;
     }
 
+    /**
+     * Método remoto que recebe a chamada do cliente para calcular o overhead de
+     * comunicação das chamadas remotas. A lista não é ordenada.
+     *
+     * @param numeros - lista de inteiros que deseja-se ordernar
+     * @return a lista de inteiros passada como parâmetro
+     * @throws java.rmi.RemoteException
+     */
     @Override
     public List<Integer> calcularOverhead(List<Integer> numeros) throws RemoteException {
         return numeros;
@@ -58,6 +74,10 @@ public class EscravoImpl implements Escravo {
         }
     }
 
+    /**
+     * Método utilizado para iniciar uma thread quando o escravo morrer e assim
+     * poder desconecta-lo do mestre
+     */
     public void attachShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

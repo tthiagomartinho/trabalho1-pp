@@ -34,6 +34,12 @@ public class MestreImpl implements Mestre {
         escravosExecutando = new ArrayList<>();
     }
 
+    /**
+     * Método usado para registro de um novo escravo no mestre
+     *
+     * @param escravo - o escravo que deseja ser adicionado ao mestre
+     * @throws java.rmi.RemoteException
+     */
     @Override
     public void registraEscravo(Escravo escravo) throws RemoteException {
         System.out.println("Registrando Escravo");
@@ -42,6 +48,12 @@ public class MestreImpl implements Mestre {
         escravo.setId(id);
     }
 
+    /**
+     * Método usado para retirar um escravo do mestre
+     *
+     * @param idEscravo - id do escravo que deseja retirar
+     * @throws java.rmi.RemoteException
+     */
     @Override
     public void retirarEscravo(int idEscravo) throws RemoteException {
         if (escravos.containsKey(idEscravo)) {
@@ -49,17 +61,53 @@ public class MestreImpl implements Mestre {
             System.out.println("Escravo Removido. Ainda me restam " + escravos.size() + " escravos");
         }
     }
+    
+    /**
+     * Método que recupera a quantidade de escravos associados ao mestre
+     *
+     * @return
+     * @throws java.rmi.RemoteException
+     */
+    @Override
+    public int getQuantidadeEscravos() throws RemoteException {
+        return escravos.size();
+    }
 
+    /**
+     * Método remoto que recebe a chamada do cliente para ordernar uma lista de
+     * inteiros
+     *
+     * @param numeros - lista de inteiros que deseja-se ordernar
+     * @return a lista de inteiros ordenada
+     * @throws java.rmi.RemoteException
+     */
     @Override
     public List<Integer> ordenarVetor(List<Integer> numeros) throws RemoteException {
         return ordenarVetor(numeros, false);
     }
 
+    /**
+     * Método remoto que recebe a chamada do cliente para calcular o overhead de
+     * comunicação das chamadas remotas. A lista não é ordenada.
+     *
+     * @param numeros - lista de inteiros que deseja-se ordernar
+     * @return a lista de inteiros passada como parâmetro
+     * @throws java.rmi.RemoteException
+     */
     @Override
     public List<Integer> calcularOverhead(List<Integer> numeros) throws RemoteException {
         return ordenarVetor(numeros, true);
     }
 
+    /**
+     * Método utilizado para ordenar uma lista de inteiros
+     *
+     * @param numeros - lista de inteiros que deseja-se ordernar
+     * @param calcularOverhead - flag que indica se o método é pra de fato
+     * ordenar a lista ou apenas calcular o overhead de comunicação
+     * @return a lista de inteiros ordenada
+     * @throws java.rmi.RemoteException
+     */
     public List<Integer> ordenarVetor(List<Integer> numeros, boolean calcularOverhead) throws RemoteException {
 
         //Divide a tarefa e executa
@@ -99,12 +147,13 @@ public class MestreImpl implements Mestre {
             }
         }
 
-        /*Consolidam o resultado*/
         List<Integer> numerosOrdenados = escravosExecutando.get(0).listaNumeros;
-        for (int i = 1; i < escravosExecutando.size(); i++) {
-            List<Integer> aux = escravosExecutando.get(i).listaNumeros;
-            numerosOrdenados = mergeLists(numerosOrdenados, aux);
-
+        if (!calcularOverhead) {
+            /*Consolidam o resultado*/
+            for (int i = 1; i < escravosExecutando.size(); i++) {
+                List<Integer> aux = escravosExecutando.get(i).listaNumeros;
+                numerosOrdenados = mergeLists(numerosOrdenados, aux);
+            }
         }
         listaThreads.clear();
         escravosExecutando.clear();
@@ -112,6 +161,15 @@ public class MestreImpl implements Mestre {
         return numerosOrdenados;
     }
 
+    /**
+     * Método utilizado para dividir o trabalho de ordenar a lista para os n
+     * escravos
+     *
+     * @param numeros - lista de inteiros que deseja-se ordernar
+     * @param calcularOverhead - flag que indica se o método é pra de fato
+     * ordenar a lista ou apenas calcular o overhead de comunicação
+     * @throws java.rmi.RemoteException
+     */
     public void delegarTrabalho(List<Integer> numeros, boolean calcularOverhead) throws RemoteException {
 
         int tamanhoLista = numeros.size();
@@ -137,6 +195,13 @@ public class MestreImpl implements Mestre {
         }
     }
 
+    /**
+     * Método utilizado para fazer o merge das listas ordenadas pelos escravos
+     *
+     * @param list1
+     * @param list2
+     * @return a lista de inteiros ordenada
+     */
     public List<Integer> mergeLists(List<Integer> list1, List<Integer> list2) {
         List<Integer> out = new ArrayList<>();
         Iterator<Integer> i1 = list1.iterator();
@@ -180,6 +245,10 @@ public class MestreImpl implements Mestre {
         }
     }
 
+    /**
+     * Método utilizado para iniciar uma thread quando o mestre morrer e assim
+     * poder desconectar os escravos
+     */
     public void attachShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -199,6 +268,10 @@ public class MestreImpl implements Mestre {
         });
     }
 
+    /**
+     * Subclasse que é executada por uma thread para efetuar o paralelismo
+     * durante a ordenação da lista
+     */
     public class ExecutarEscravo implements Runnable {
 
         private final int idEscravo;
@@ -231,10 +304,5 @@ public class MestreImpl implements Mestre {
                 }
             }
         }
-    }
-
-    @Override
-    public int getQuantidadeEscravos() throws RemoteException {
-        return escravos.size();
     }
 }
