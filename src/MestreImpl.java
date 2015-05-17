@@ -52,9 +52,18 @@ public class MestreImpl implements Mestre {
 
     @Override
     public List<Integer> ordenarVetor(List<Integer> numeros) throws RemoteException {
+        return ordenarVetor(numeros, false);
+    }
+
+    @Override
+    public List<Integer> calcularOverhead(List<Integer> numeros) throws RemoteException {
+        return ordenarVetor(numeros, true);
+    }
+
+    public List<Integer> ordenarVetor(List<Integer> numeros, boolean calcularOverhead) throws RemoteException {
 
         //Divide a tarefa e executa
-        delegarTrabalho(numeros);
+        delegarTrabalho(numeros, calcularOverhead);
 
         boolean existeEscravoFaltoso = true;
         while (existeEscravoFaltoso) { //enquanto existirem escravos que falharam
@@ -84,7 +93,7 @@ public class MestreImpl implements Mestre {
                 for (ExecutarEscravo escravoExecutando : escravosFaltosos) {
                     escravosExecutando.remove(escravoExecutando);
                 }
-                delegarTrabalho(numerosNaoOrdenados);
+                delegarTrabalho(numerosNaoOrdenados, calcularOverhead);
             } else {
                 existeEscravoFaltoso = false;
             }
@@ -93,8 +102,8 @@ public class MestreImpl implements Mestre {
         /*Consolidam o resultado*/
         List<Integer> numerosOrdenados = escravosExecutando.get(0).listaNumeros;
         for (int i = 1; i < escravosExecutando.size(); i++) {
-            List<Integer> list1aux2 = escravosExecutando.get(i).listaNumeros;
-            numerosOrdenados = mergeLists(numerosOrdenados, list1aux2);
+            List<Integer> aux = escravosExecutando.get(i).listaNumeros;
+            numerosOrdenados = mergeLists(numerosOrdenados, aux);
 
         }
         listaThreads.clear();
@@ -103,7 +112,7 @@ public class MestreImpl implements Mestre {
         return numerosOrdenados;
     }
 
-    public void delegarTrabalho(List<Integer> numeros) throws RemoteException {
+    public void delegarTrabalho(List<Integer> numeros, boolean calcularOverhead) throws RemoteException {
 
         int tamanhoLista = numeros.size();
         int tamanhoEscravos = escravos.size();
@@ -118,7 +127,7 @@ public class MestreImpl implements Mestre {
             Integer key = entrySet.getKey(); //pega o Id do escravo
             Escravo escravo = entrySet.getValue(); //pega o escravo
             List<Integer> subList = new ArrayList<>(numeros.subList(indiceInicial, indiceFinal));
-            ExecutarEscravo executarEscravo = new ExecutarEscravo(key, escravo, subList);
+            ExecutarEscravo executarEscravo = new ExecutarEscravo(key, escravo, subList, calcularOverhead);
             escravosExecutando.add(executarEscravo);
             Thread thread = new Thread(executarEscravo, key.toString()); //cira uma thread cujo nome é o ID do escravo
             listaThreads.add(thread);
@@ -196,18 +205,24 @@ public class MestreImpl implements Mestre {
         private final Escravo escravo;
         private List<Integer> listaNumeros;
         private boolean sucesso;
+        private boolean calcularOverhead;
 
-        public ExecutarEscravo(int idEscravo, Escravo escravo, List<Integer> listaNumeros) {
+        public ExecutarEscravo(int idEscravo, Escravo escravo, List<Integer> listaNumeros, boolean calcularOverhead) {
             this.idEscravo = idEscravo;
             this.escravo = escravo;
             this.listaNumeros = listaNumeros;
-            sucesso = false;
+            this.sucesso = false;
+            this.calcularOverhead = calcularOverhead;
         }
 
         @Override
         public void run() {
             try {
-                listaNumeros = escravo.ordenarVetor(listaNumeros);
+                if (calcularOverhead) {
+                    listaNumeros = escravo.calcularOverhead(listaNumeros);
+                } else {
+                    listaNumeros = escravo.ordenarVetor(listaNumeros);
+                }
                 sucesso = true;
             } catch (RemoteException ex) {
                 try {

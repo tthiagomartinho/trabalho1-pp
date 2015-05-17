@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 
-
 import java.rmi.RemoteException;
 import java.util.List;
 
@@ -15,4 +14,7 @@ import java.util.List;
 public interface Ordenar extends java.rmi.Remote {
 
     public List<Integer> ordenarVetor(List<Integer> numeros) throws RemoteException;
+
+    public List<Integer> calcularOverhead(List<Integer> numeros) throws RemoteException;
+
 }

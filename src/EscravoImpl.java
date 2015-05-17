@@ -33,6 +33,11 @@ public class EscravoImpl implements Escravo {
     }
 
     @Override
+    public List<Integer> calcularOverhead(List<Integer> numeros) throws RemoteException {
+        return numeros;
+    }
+
+    @Override
     public void terminarEscravo() {
         System.out.println("Terminando o Escravo");
         System.exit(0);
