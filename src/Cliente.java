@@ -90,7 +90,7 @@ public class Cliente {
             Registry registry = LocateRegistry.getRegistry(host);
             Mestre stub = (Mestre) registry.lookup("Mestre");
 
-            PrintWriter writer = new PrintWriter(stub.getQuantidadeEscravos() + "_" + nomeArquivoEntrada + ".csv", "UTF-8");
+            PrintWriter writer = new PrintWriter("saidas/" + stub.getQuantidadeEscravos() + "_" + nomeArquivoEntrada + ".csv", "UTF-8");
             writer.println("numero de elementos ; tempo sequencial ; tempo paralelo ; tempo overhead");
             for (String line : Files.readAllLines(Paths.get(nomeArquivoEntrada), Charset.defaultCharset())) {
                 nElementos = Integer.valueOf(line);
