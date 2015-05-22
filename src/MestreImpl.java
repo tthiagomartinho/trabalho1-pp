@@ -58,7 +58,7 @@ public class MestreImpl implements Mestre {
     public void retirarEscravo(int idEscravo) throws RemoteException {
         if (escravos.containsKey(idEscravo)) {
             escravos.remove(idEscravo);
-            System.out.println("Escravo Removido. Ainda me restam " + escravos.size() + " escravos");
+            System.out.println("Escravo " + idEscravo + " Removido. Ainda me restam " + escravos.size() + " escravos");
         }
     }
     
@@ -222,7 +222,8 @@ public class MestreImpl implements Mestre {
 
     public static void main(String args[]) {
         try {
-            Registry registry = LocateRegistry.getRegistry(); // opcional: host
+            String host = args.length > 1 ? args[1] : null;
+            Registry registry = LocateRegistry.getRegistry(host);
             try {
                 Mestre stub = (Mestre) registry.lookup("Mestre");
                 if (stub != null) {

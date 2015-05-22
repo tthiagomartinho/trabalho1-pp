@@ -84,7 +84,6 @@ public class EscravoImpl implements Escravo {
             public void run() {
                 try {
                     mestre.retirarEscravo(id);
-                    System.out.println("EXTERMINATING ESCRAVO");
                 } catch (RemoteException ex) {
                     Logger.getLogger(EscravoImpl.class.getName()).log(Level.SEVERE, null, ex);
                 }
